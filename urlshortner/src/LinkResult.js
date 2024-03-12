@@ -2,24 +2,36 @@ import { useEffect, useState } from "react";
 import {CopyToClipboard} from "react-copy-to-clipboard"
 import axios from "axios";
 
+
 const LinkResult = ({inputValue}) => {
 
-    const [shortenLink , setShortenLink]= useState("shagufa is dumb");
+    const [shortenLink , setShortenLink]= useState("");
     const [copied, setCopied]=useState(false);
     const [loading, setLoading]=useState(false);
     const [error, setError]=useState(false);
 
-    const fetchData= async ()=>{
-        try{
-            setLoading(true);
-            const res= await axios(`https://api.shrtco.de/v2/shorten?url=${inputValue}`);
-            setShortenLink(res.data.result.full);
-        }catch(err){
-            setError(err);
-        }finally{
-            setLoading(false);
-        }
+const fetchData= async()=>{
+    try {
+        setLoading(true);
+       
+        const url = process.env.REACT_APP_API_URL;
+        const bearerToken=process.env.REACT_APP_API_TOKEN;
+        const data={
+            "url":`${inputValue}`,
+        };
+        const headers={
+            Authorization:`Bearer ${bearerToken}`,
+            'Content-Type':'application/json'
+        };
+    const response=await axios.post(url,data,{headers});
+    setShortenLink(response.data.data.tiny_url);
+  } catch(err){
+        setError(err);
+    }finally{
+        setLoading(false);
     }
+}
+
 
     //run every timee input value change
     useEffect(()=>{
@@ -43,7 +55,6 @@ const LinkResult = ({inputValue}) => {
     if(error){
         return <p className="noData">Something went wrong</p>
     }
-
     return (
        <>
        {shortenLink && ( <div className="result">
@@ -55,7 +66,7 @@ const LinkResult = ({inputValue}) => {
                 setCopied(true)
         }}>
 
-        <button className={copied? "copied":""}>Copy to Clipboard</button>
+        <button className={copied? "copied":""} >Copy to Clipboard</button>
         </CopyToClipboard>
         
         </div>)}
